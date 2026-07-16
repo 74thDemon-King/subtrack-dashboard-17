@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Search, Plus, Pencil, Trash2, MoreHorizontal } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -21,9 +21,7 @@ export const Route = createFileRoute("/_shell/subscriptions/")({
 const CATEGORIES = ["All", "Entertainment", "Music", "Productivity", "Utilities", "Fitness", "Cloud", "Shopping", "Other"] as const;
 
 function SubscriptionsPage() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // If on /subscriptions/add, render child outlet only
-  if (pathname !== "/subscriptions") return <Outlet />;
+
 
   const { subs, remove } = useSubscriptions();
   const [q, setQ] = useState("");
