@@ -9,38 +9,151 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ShellRouteImport } from './routes/_shell'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ShellSubscriptionsRouteImport } from './routes/_shell.subscriptions'
+import { Route as ShellProfileRouteImport } from './routes/_shell.profile'
+import { Route as ShellInsightsRouteImport } from './routes/_shell.insights'
+import { Route as ShellDashboardRouteImport } from './routes/_shell.dashboard'
+import { Route as ShellCalendarRouteImport } from './routes/_shell.calendar'
+import { Route as ShellAnalyticsRouteImport } from './routes/_shell.analytics'
+import { Route as ShellSubscriptionsIndexRouteImport } from './routes/_shell.subscriptions.index'
+import { Route as ShellSubscriptionsAddRouteImport } from './routes/_shell.subscriptions.add'
 
+const ShellRoute = ShellRouteImport.update({
+  id: '/_shell',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShellSubscriptionsRoute = ShellSubscriptionsRouteImport.update({
+  id: '/subscriptions',
+  path: '/subscriptions',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellProfileRoute = ShellProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellInsightsRoute = ShellInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellDashboardRoute = ShellDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellCalendarRoute = ShellCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellAnalyticsRoute = ShellAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellSubscriptionsIndexRoute = ShellSubscriptionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ShellSubscriptionsRoute,
+} as any)
+const ShellSubscriptionsAddRoute = ShellSubscriptionsAddRouteImport.update({
+  id: '/add',
+  path: '/add',
+  getParentRoute: () => ShellSubscriptionsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/analytics': typeof ShellAnalyticsRoute
+  '/calendar': typeof ShellCalendarRoute
+  '/dashboard': typeof ShellDashboardRoute
+  '/insights': typeof ShellInsightsRoute
+  '/profile': typeof ShellProfileRoute
+  '/subscriptions': typeof ShellSubscriptionsRouteWithChildren
+  '/subscriptions/add': typeof ShellSubscriptionsAddRoute
+  '/subscriptions/': typeof ShellSubscriptionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/analytics': typeof ShellAnalyticsRoute
+  '/calendar': typeof ShellCalendarRoute
+  '/dashboard': typeof ShellDashboardRoute
+  '/insights': typeof ShellInsightsRoute
+  '/profile': typeof ShellProfileRoute
+  '/subscriptions/add': typeof ShellSubscriptionsAddRoute
+  '/subscriptions': typeof ShellSubscriptionsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_shell': typeof ShellRouteWithChildren
+  '/_shell/analytics': typeof ShellAnalyticsRoute
+  '/_shell/calendar': typeof ShellCalendarRoute
+  '/_shell/dashboard': typeof ShellDashboardRoute
+  '/_shell/insights': typeof ShellInsightsRoute
+  '/_shell/profile': typeof ShellProfileRoute
+  '/_shell/subscriptions': typeof ShellSubscriptionsRouteWithChildren
+  '/_shell/subscriptions/add': typeof ShellSubscriptionsAddRoute
+  '/_shell/subscriptions/': typeof ShellSubscriptionsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/analytics'
+    | '/calendar'
+    | '/dashboard'
+    | '/insights'
+    | '/profile'
+    | '/subscriptions'
+    | '/subscriptions/add'
+    | '/subscriptions/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/analytics'
+    | '/calendar'
+    | '/dashboard'
+    | '/insights'
+    | '/profile'
+    | '/subscriptions/add'
+    | '/subscriptions'
+  id:
+    | '__root__'
+    | '/'
+    | '/_shell'
+    | '/_shell/analytics'
+    | '/_shell/calendar'
+    | '/_shell/dashboard'
+    | '/_shell/insights'
+    | '/_shell/profile'
+    | '/_shell/subscriptions'
+    | '/_shell/subscriptions/add'
+    | '/_shell/subscriptions/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ShellRoute: typeof ShellRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_shell': {
+      id: '/_shell'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ShellRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +161,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_shell/subscriptions': {
+      id: '/_shell/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/subscriptions'
+      preLoaderRoute: typeof ShellSubscriptionsRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/profile': {
+      id: '/_shell/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ShellProfileRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/insights': {
+      id: '/_shell/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof ShellInsightsRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/dashboard': {
+      id: '/_shell/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof ShellDashboardRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/calendar': {
+      id: '/_shell/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof ShellCalendarRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/analytics': {
+      id: '/_shell/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof ShellAnalyticsRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/subscriptions/': {
+      id: '/_shell/subscriptions/'
+      path: '/'
+      fullPath: '/subscriptions/'
+      preLoaderRoute: typeof ShellSubscriptionsIndexRouteImport
+      parentRoute: typeof ShellSubscriptionsRoute
+    }
+    '/_shell/subscriptions/add': {
+      id: '/_shell/subscriptions/add'
+      path: '/add'
+      fullPath: '/subscriptions/add'
+      preLoaderRoute: typeof ShellSubscriptionsAddRouteImport
+      parentRoute: typeof ShellSubscriptionsRoute
+    }
   }
 }
 
+interface ShellSubscriptionsRouteChildren {
+  ShellSubscriptionsAddRoute: typeof ShellSubscriptionsAddRoute
+  ShellSubscriptionsIndexRoute: typeof ShellSubscriptionsIndexRoute
+}
+
+const ShellSubscriptionsRouteChildren: ShellSubscriptionsRouteChildren = {
+  ShellSubscriptionsAddRoute: ShellSubscriptionsAddRoute,
+  ShellSubscriptionsIndexRoute: ShellSubscriptionsIndexRoute,
+}
+
+const ShellSubscriptionsRouteWithChildren =
+  ShellSubscriptionsRoute._addFileChildren(ShellSubscriptionsRouteChildren)
+
+interface ShellRouteChildren {
+  ShellAnalyticsRoute: typeof ShellAnalyticsRoute
+  ShellCalendarRoute: typeof ShellCalendarRoute
+  ShellDashboardRoute: typeof ShellDashboardRoute
+  ShellInsightsRoute: typeof ShellInsightsRoute
+  ShellProfileRoute: typeof ShellProfileRoute
+  ShellSubscriptionsRoute: typeof ShellSubscriptionsRouteWithChildren
+}
+
+const ShellRouteChildren: ShellRouteChildren = {
+  ShellAnalyticsRoute: ShellAnalyticsRoute,
+  ShellCalendarRoute: ShellCalendarRoute,
+  ShellDashboardRoute: ShellDashboardRoute,
+  ShellInsightsRoute: ShellInsightsRoute,
+  ShellProfileRoute: ShellProfileRoute,
+  ShellSubscriptionsRoute: ShellSubscriptionsRouteWithChildren,
+}
+
+const ShellRouteWithChildren = ShellRoute._addFileChildren(ShellRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ShellRoute: ShellRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

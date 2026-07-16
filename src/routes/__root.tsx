@@ -77,14 +77,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "SubTrack — Manage Every Subscription in One Place" },
+      { name: "description", content: "Track OTT subscriptions, utility bills, SaaS tools and recurring expenses from a single, beautiful dashboard." },
+      { name: "author", content: "SubTrack" },
+      { property: "og:title", content: "SubTrack — Manage Every Subscription in One Place" },
+      { property: "og:description", content: "One dashboard for every recurring payment. Renewals, spending, and savings — all in one place." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
