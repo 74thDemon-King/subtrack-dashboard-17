@@ -13,7 +13,7 @@ import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { inr, fmtDate } from "@/lib/format";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_shell/subscriptions")({
+export const Route = createFileRoute("/_shell/subscriptions/")({
   head: () => ({ meta: [{ title: "My Subscriptions — SubTrack" }] }),
   component: SubscriptionsPage,
 });
