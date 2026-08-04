@@ -24,34 +24,37 @@ export function useSubscriptions() {
     setReady(true);
   }, []);
 
-  const persist = useCallback((next: Subscription[]) => {
-    setSubs(next);
-    try {
-      window.localStorage.setItem(KEY, JSON.stringify(next));
-    } catch {}
+  const persist = useCallback((updateSubs: (current: Subscription[]) => Subscription[]) => {
+    setSubs((current) => {
+      const next = updateSubs(current);
+      try {
+        window.localStorage.setItem(KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
   }, []);
 
   const add = useCallback(
     (s: Omit<Subscription, "id">) => {
       const next: Subscription = { ...s, id: crypto.randomUUID() };
-      persist([next, ...subs]);
+      persist((current) => [next, ...current]);
     },
-    [subs, persist],
+    [persist],
   );
 
   const update = useCallback(
     (id: string, patch: Partial<Subscription>) => {
-      persist(subs.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+      persist((current) => current.map((s) => (s.id === id ? { ...s, ...patch } : s)));
     },
-    [subs, persist],
+    [persist],
   );
 
   const remove = useCallback(
-    (id: string) => persist(subs.filter((s) => s.id !== id)),
-    [subs, persist],
+    (id: string) => persist((current) => current.filter((s) => s.id !== id)),
+    [persist],
   );
 
-  const reset = useCallback(() => persist(mockSubscriptions), [persist]);
+  const reset = useCallback(() => persist(() => mockSubscriptions), [persist]);
 
   return { subs, ready, add, update, remove, reset };
 }
