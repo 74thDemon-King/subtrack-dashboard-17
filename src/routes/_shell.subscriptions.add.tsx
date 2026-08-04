@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Upload, ArrowLeft } from "lucide-react";
+import { ArrowLeft, WandSparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -114,13 +114,9 @@ function AddSubscription() {
             </Select>
           </div>
 
-          <div className="md:col-span-2">
-            <Label>Logo (optional)</Label>
-            <label className="mt-1.5 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border/70 bg-muted/30 px-4 py-6 text-sm text-muted-foreground hover:bg-muted/50">
-              <Upload className="h-4 w-4" />
-              <span>Click to upload (UI only)</span>
-              <input type="file" className="hidden" accept="image/*" onChange={() => toast.info("Logo upload is UI-only.")} />
-            </label>
+          <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/30 px-4 py-3 text-sm text-muted-foreground md:col-span-2">
+            <WandSparkles className="h-4 w-4 shrink-0 text-foreground" />
+            <span>The service logo is added automatically from its name.</span>
           </div>
 
           <div className="flex justify-end gap-3 md:col-span-2">
