@@ -12,8 +12,15 @@ import { SubLogo } from "@/components/subtrack/SubLogo";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { inr, fmtDate } from "@/lib/format";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { BillingCycle, Category, SubStatus, Subscription } from "@/types/subscription";
 
 export const Route = createFileRoute("/_shell/subscriptions/")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q : "",
+  }),
   head: () => ({ meta: [{ title: "My Subscriptions — SubTrack" }] }),
   component: SubscriptionsPage,
 });
@@ -21,11 +28,12 @@ export const Route = createFileRoute("/_shell/subscriptions/")({
 const CATEGORIES = ["All", "Entertainment", "Music", "Productivity", "Utilities", "Fitness", "Cloud", "Shopping", "Other"] as const;
 
 function SubscriptionsPage() {
-
-
-  const { subs, remove } = useSubscriptions();
-  const [q, setQ] = useState("");
+  const search = Route.useSearch();
+  const { subs, add, update, remove } = useSubscriptions();
+  const [q, setQ] = useState(search.q);
   const [cat, setCat] = useState<string>("All");
+  const [editing, setEditing] = useState<Subscription | null>(null);
+  const [deleting, setDeleting] = useState<Subscription | null>(null);
 
   const filtered = useMemo(() => {
     return subs.filter((s) => {
@@ -34,6 +42,29 @@ function SubscriptionsPage() {
       return true;
     });
   }, [subs, q, cat]);
+
+  const confirmDelete = () => {
+    if (!deleting) return;
+    const removed = deleting;
+    remove(removed.id);
+    setDeleting(null);
+    toast.success(`${removed.name} removed`, {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          const { id: _id, ...subscription } = removed;
+          add(subscription);
+        },
+      },
+    });
+  };
+
+  const saveEdit = () => {
+    if (!editing || !editing.name.trim() || editing.amount < 0) return;
+    update(editing.id, { ...editing, name: editing.name.trim() });
+    toast.success(`${editing.name} updated`);
+    setEditing(null);
+  };
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -55,15 +86,16 @@ function SubscriptionsPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((c) => (
-              <button
+              <Button
                 key={c}
+                type="button"
+                variant={cat === c ? "default" : "outline"}
+                size="sm"
                 onClick={() => setCat(c)}
-                className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                  cat === c ? "border-primary bg-primary text-primary-foreground" : "border-border/60 bg-background text-muted-foreground hover:text-foreground"
-                }`}
+                className="h-7 rounded-full px-3 text-xs"
               >
                 {c}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -82,17 +114,17 @@ function SubscriptionsPage() {
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" aria-label={`Actions for ${s.name}`}>
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => toast.info("Edit is a UI-only demo.")}>
+                  <DropdownMenuItem onClick={() => setEditing({ ...s })}>
                     <Pencil className="mr-2 h-4 w-4" /> Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
-                    onClick={() => { remove(s.id); toast.success(`${s.name} removed`); }}
+                    onClick={() => setDeleting(s)}
                   >
                     <Trash2 className="mr-2 h-4 w-4" /> Delete
                   </DropdownMenuItem>
@@ -125,6 +157,32 @@ function SubscriptionsPage() {
           </Card>
         )}
       </div>
+
+      <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit subscription</DialogTitle></DialogHeader>
+          {editing && (
+            <div className="grid gap-4 py-2 md:grid-cols-2">
+              <div className="md:col-span-2"><Label htmlFor="edit-name">Name</Label><Input id="edit-name" className="mt-1.5" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></div>
+              <div><Label htmlFor="edit-amount">Amount</Label><Input id="edit-amount" className="mt-1.5" type="number" min="0" step="0.01" value={editing.amount} onChange={(e) => setEditing({ ...editing, amount: Number(e.target.value) })} /></div>
+              <div><Label htmlFor="edit-date">Renewal date</Label><Input id="edit-date" className="mt-1.5" type="date" value={editing.renewalDate} onChange={(e) => setEditing({ ...editing, renewalDate: e.target.value })} /></div>
+              <div><Label>Category</Label><Select value={editing.category} onValueChange={(value) => setEditing({ ...editing, category: value as Category })}><SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger><SelectContent>{CATEGORIES.slice(1).map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent></Select></div>
+              <div><Label>Billing cycle</Label><Select value={editing.cycle} onValueChange={(value) => setEditing({ ...editing, cycle: value as BillingCycle })}><SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger><SelectContent>{["Weekly", "Monthly", "Quarterly", "Yearly"].map((cycle) => <SelectItem key={cycle} value={cycle}>{cycle}</SelectItem>)}</SelectContent></Select></div>
+              <div><Label>Status</Label><Select value={editing.status} onValueChange={(value) => setEditing({ ...editing, status: value as SubStatus })}><SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger><SelectContent>{["Active", "Paused", "Cancelled"].map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select></div>
+              <div><Label htmlFor="edit-source">Payment source</Label><Input id="edit-source" className="mt-1.5" value={editing.paymentSource} onChange={(e) => setEditing({ ...editing, paymentSource: e.target.value })} /></div>
+            </div>
+          )}
+          <DialogFooter><Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button><Button onClick={saveEdit}>Save changes</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!deleting} onOpenChange={(open) => !open && setDeleting(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Remove {deleting?.name}?</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">This removes the subscription from your dashboard and analytics. You can undo it from the confirmation message.</p>
+          <DialogFooter><Button variant="outline" onClick={() => setDeleting(null)}>Keep it</Button><Button variant="destructive" onClick={confirmDelete}>Remove</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

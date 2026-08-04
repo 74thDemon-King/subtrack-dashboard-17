@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import type { Subscription } from "@/types/subscription";
 import { mockSubscriptions } from "@/data/mockSubscriptions";
 
@@ -15,23 +15,45 @@ function load(): Subscription[] {
   }
 }
 
-export function useSubscriptions() {
-  const [subs, setSubs] = useState<Subscription[]>(mockSubscriptions);
-  const [ready, setReady] = useState(false);
+let browserSnapshot: Subscription[] | undefined;
+let browserRaw: string | null | undefined;
+const listeners = new Set<() => void>();
 
-  useEffect(() => {
-    setSubs(load());
-    setReady(true);
-  }, []);
+function getSnapshot() {
+  const raw = window.localStorage.getItem(KEY);
+  if (browserSnapshot === undefined || raw !== browserRaw) {
+    browserRaw = raw;
+    browserSnapshot = load();
+  }
+  return browserSnapshot;
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === KEY) listener();
+  };
+  window.addEventListener("storage", onStorage);
+  return () => {
+    listeners.delete(listener);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+function write(next: Subscription[]) {
+  browserSnapshot = next;
+  browserRaw = JSON.stringify(next);
+  window.localStorage.setItem(KEY, browserRaw);
+  listeners.forEach((listener) => listener());
+}
+
+export function useSubscriptions() {
+  const subs = useSyncExternalStore(subscribe, getSnapshot, () => mockSubscriptions);
 
   const persist = useCallback((updateSubs: (current: Subscription[]) => Subscription[]) => {
-    setSubs((current) => {
-      const next = updateSubs(current);
-      try {
-        window.localStorage.setItem(KEY, JSON.stringify(next));
-      } catch {}
-      return next;
-    });
+    try {
+      write(updateSubs(getSnapshot()));
+    } catch {}
   }, []);
 
   const add = useCallback(
@@ -56,5 +78,5 @@ export function useSubscriptions() {
 
   const reset = useCallback(() => persist(() => mockSubscriptions), [persist]);
 
-  return { subs, ready, add, update, remove, reset };
+  return { subs, ready: true, add, update, remove, reset };
 }

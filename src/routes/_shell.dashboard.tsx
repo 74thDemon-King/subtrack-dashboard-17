@@ -10,6 +10,7 @@ import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { inr, daysUntil, monthlyEquivalent } from "@/lib/format";
 import { monthlySpendTrend, staticInsights } from "@/data/mockSubscriptions";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell, CartesianGrid } from "recharts";
+import { useProfileIdentity } from "@/hooks/useProfileIdentity";
 
 export const Route = createFileRoute("/_shell/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — SubTrack" }] }),
@@ -29,6 +30,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 function Dashboard() {
   const { subs } = useSubscriptions();
+  const profile = useProfileIdentity();
   const active = subs.filter((s) => s.status === "Active");
 
   const monthlySpend = useMemo(
@@ -54,11 +56,11 @@ function Dashboard() {
     <div className="mx-auto max-w-7xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Welcome back, Arjun</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Welcome back, {profile.name.split(" ")[0] || "there"}</h1>
           <p className="text-sm text-muted-foreground">Here's what's happening with your subscriptions this month.</p>
         </div>
         <Button asChild className="rounded-xl shadow-sm">
-          <Link to="/subscriptions/add">+ Add Subscription</Link>
+            <Link to="/subscriptions/add">+ Add Subscription</Link>
         </Button>
       </div>
 

@@ -40,13 +40,19 @@ function ProfilePage() {
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(KEY);
-      if (raw) setP({ ...defaults, ...JSON.parse(raw) });
+      if (raw) {
+        const saved = { ...defaults, ...JSON.parse(raw) };
+        setP(saved);
+        document.documentElement.classList.toggle("dark", saved.darkMode);
+      }
     } catch {}
   }, []);
 
   const save = () => {
     try {
       window.localStorage.setItem(KEY, JSON.stringify(p));
+      document.documentElement.classList.toggle("dark", p.darkMode);
+      window.dispatchEvent(new CustomEvent("subtrack:profile"));
       toast.success("Preferences saved");
     } catch {
       toast.error("Could not save preferences");
@@ -110,7 +116,13 @@ function ProfilePage() {
                 <p className="text-sm font-medium">{row.title}</p>
                 <p className="text-xs text-muted-foreground">{row.desc}</p>
               </div>
-              <Switch checked={p[row.key]} onCheckedChange={(v) => setP({ ...p, [row.key]: v })} />
+              <Switch
+                checked={p[row.key]}
+                onCheckedChange={(v) => {
+                  setP({ ...p, [row.key]: v });
+                  if (row.key === "darkMode") document.documentElement.classList.toggle("dark", v);
+                }}
+              />
             </div>
           ))}
         </div>
