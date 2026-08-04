@@ -11,14 +11,18 @@ const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "
 
 const ICONS = Object.values(brandIcons) as BrandIcon[];
 
+const BRAND_ALIASES: Record<string, string> = {
+  googleone: "googlecloud",
+  youtubepremium: "youtube",
+  microsoft365: "microsoftoffice",
+  icloudplus: "icloud",
+};
+
 function findBrandIcon(name: string) {
   const query = normalize(name);
   if (!query) return undefined;
-
-  return ICONS.find((icon) => {
-    const title = normalize(icon.title);
-    return title === query || (query.length >= 5 && (title.includes(query) || query.includes(title)));
-  });
+  const expectedTitle = BRAND_ALIASES[query] ?? query;
+  return ICONS.find((icon) => normalize(icon.title) === expectedTitle);
 }
 
 export function SubLogo({ sub, size = 40 }: { sub: Pick<Subscription, "name" | "color" | "logo">; size?: number }) {
