@@ -29,7 +29,7 @@ const CATEGORIES = ["All", "Entertainment", "Music", "Productivity", "Utilities"
 
 function SubscriptionsPage() {
   const search = Route.useSearch();
-  const { subs, update, remove } = useSubscriptions();
+  const { subs, add, update, remove } = useSubscriptions();
   const [q, setQ] = useState(search.q);
   const [cat, setCat] = useState<string>("All");
   const [editing, setEditing] = useState<Subscription | null>(null);
@@ -49,7 +49,13 @@ function SubscriptionsPage() {
     remove(removed.id);
     setDeleting(null);
     toast.success(`${removed.name} removed`, {
-      action: { label: "Undo", onClick: () => update(removed.id, removed) },
+      action: {
+        label: "Undo",
+        onClick: () => {
+          const { id: _id, ...subscription } = removed;
+          add(subscription);
+        },
+      },
     });
   };
 
