@@ -22,6 +22,11 @@ const CYCLES: BillingCycle[] = ["Monthly", "Yearly", "Weekly", "Quarterly"];
 const STATUSES: SubStatus[] = ["Active", "Paused", "Cancelled"];
 const COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#0EA5E9", "#64748B"];
 
+function colorFor(name: string) {
+  const index = [...name].reduce((total, char) => total + char.charCodeAt(0), 0) % COLORS.length;
+  return COLORS[index];
+}
+
 function AddSubscription() {
   const { add } = useSubscriptions();
   const navigate = useNavigate();
@@ -51,7 +56,7 @@ function AddSubscription() {
       renewalDate: form.renewalDate,
       paymentSource: form.paymentSource,
       status: form.status,
-      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      color: colorFor(form.name),
       logo: form.name.trim().charAt(0).toUpperCase(),
     });
     toast.success(`${form.name} added`);
@@ -85,7 +90,7 @@ function AddSubscription() {
 
           <div>
             <Label htmlFor="amount">Amount (₹)</Label>
-            <Input id="amount" type="number" min="0" value={form.amount} onChange={(e) => set("amount", e.target.value)} placeholder="0" className="mt-1.5 h-11 rounded-xl" />
+            <Input id="amount" type="number" min="0" step="0.01" required value={form.amount} onChange={(e) => set("amount", e.target.value)} placeholder="0" className="mt-1.5 h-11 rounded-xl" />
           </div>
 
           <div>

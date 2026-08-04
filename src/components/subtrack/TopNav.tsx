@@ -1,4 +1,6 @@
 import { Bell, Search } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -14,16 +16,27 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 export function TopNav() {
+  const navigate = useNavigate();
+  const [query, setQuery] = useState("");
+
+  const submitSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    void navigate({ to: "/subscriptions", search: { q: query.trim() } });
+  };
+
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border/60 bg-background/80 px-4 backdrop-blur">
       <SidebarTrigger className="text-muted-foreground" />
-      <div className="relative hidden max-w-md flex-1 md:block">
+      <form onSubmit={submitSearch} className="relative hidden max-w-md flex-1 md:block">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
           placeholder="Search subscriptions, bills..."
+          aria-label="Search subscriptions"
           className="h-10 rounded-xl border-border/60 bg-muted/40 pl-9 focus-visible:bg-background"
         />
-      </div>
+      </form>
       <div className="ml-auto flex items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -52,9 +65,11 @@ export function TopNav() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Avatar className="h-9 w-9 border border-border/60">
-          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">AK</AvatarFallback>
-        </Avatar>
+        <Link to="/profile" aria-label="Open profile">
+          <Avatar className="h-9 w-9 border border-border/60">
+            <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">AK</AvatarFallback>
+          </Avatar>
+        </Link>
       </div>
     </header>
   );
