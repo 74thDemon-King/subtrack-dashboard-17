@@ -58,7 +58,7 @@ function Dashboard() {
           <p className="text-sm text-muted-foreground">Here's what's happening with your subscriptions this month.</p>
         </div>
         <Button asChild className="rounded-xl shadow-sm">
-          <Link to="/subscriptions/add">+ Add Subscription</Link>
+            <Link to="/subscriptions/add">+ Add Subscription</Link>
         </Button>
       </div>
 
