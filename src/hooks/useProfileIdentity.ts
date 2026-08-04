@@ -16,12 +16,15 @@ function getSnapshot() {
 }
 
 function subscribe(listener: () => void) {
-  const onChange = () => listener();
-  window.addEventListener("storage", onChange);
-  window.addEventListener("subtrack:profile", onChange);
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === KEY) listener();
+  };
+  const onProfile = () => listener();
+  window.addEventListener("storage", onStorage);
+  window.addEventListener("subtrack:profile", onProfile);
   return () => {
-    window.removeEventListener("storage", onChange);
-    window.removeEventListener("subtrack:profile", onChange);
+    window.removeEventListener("storage", onStorage);
+    window.removeEventListener("subtrack:profile", onProfile);
   };
 }
 

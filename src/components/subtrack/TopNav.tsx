@@ -14,10 +14,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useSubscriptions } from "@/hooks/useSubscriptions";
+import { useProfileIdentity } from "@/hooks/useProfileIdentity";
+import { daysUntil, fmtDate, inr } from "@/lib/format";
 
 export function TopNav() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+  const { subs } = useSubscriptions();
+  const profile = useProfileIdentity();
+  const renewals = subs
+    .filter((sub) => sub.status === "Active" && daysUntil(sub.renewalDate) >= 0 && daysUntil(sub.renewalDate) <= 7)
+    .sort((a, b) => daysUntil(a.renewalDate) - daysUntil(b.renewalDate))
+    .slice(0, 4);
+  const initials = profile.name.split(" ").filter(Boolean).map((part) => part[0]).slice(0, 2).join("").toUpperCase() || "U";
 
   const submitSearch = (event: React.FormEvent) => {
     event.preventDefault();
@@ -42,32 +52,27 @@ export function TopNav() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative rounded-xl">
               <Bell className="h-4 w-4" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
+              {renewals.length > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
             <DropdownMenuLabel>Notifications</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex-col items-start gap-1">
-              <div className="flex w-full items-center justify-between">
-                <span className="text-sm font-medium">Netflix renews in 4 days</span>
-                <Badge variant="secondary">₹649</Badge>
-              </div>
-              <span className="text-xs text-muted-foreground">Renewal on the 25th</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex-col items-start gap-1">
-              <span className="text-sm font-medium">You may save ₹900/month</span>
-              <span className="text-xs text-muted-foreground">Review 2 unused subscriptions</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex-col items-start gap-1">
-              <span className="text-sm font-medium">Electricity bill due</span>
-              <span className="text-xs text-muted-foreground">₹1,250 in 6 days</span>
-            </DropdownMenuItem>
+            {renewals.map((sub) => (
+              <DropdownMenuItem key={sub.id} className="flex-col items-start gap-1" onClick={() => void navigate({ to: "/calendar" })}>
+                <div className="flex w-full items-center justify-between gap-3">
+                  <span className="text-sm font-medium">{sub.name} renews {daysUntil(sub.renewalDate) === 0 ? "today" : `in ${daysUntil(sub.renewalDate)} days`}</span>
+                  <Badge variant="secondary">{inr(sub.amount)}</Badge>
+                </div>
+                <span className="text-xs text-muted-foreground">Renewal on {fmtDate(sub.renewalDate)}</span>
+              </DropdownMenuItem>
+            ))}
+            {renewals.length === 0 && <DropdownMenuItem disabled>No renewals in the next 7 days</DropdownMenuItem>}
           </DropdownMenuContent>
         </DropdownMenu>
         <Link to="/profile" aria-label="Open profile">
           <Avatar className="h-9 w-9 border border-border/60">
-            <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">AK</AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">{initials}</AvatarFallback>
           </Avatar>
         </Link>
       </div>
