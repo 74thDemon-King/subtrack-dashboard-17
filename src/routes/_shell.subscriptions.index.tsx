@@ -114,7 +114,7 @@ function SubscriptionsPage() {
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" aria-label={`Actions for ${s.name}`}>
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
