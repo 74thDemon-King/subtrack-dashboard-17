@@ -1,5 +1,13 @@
 import type { Subscription } from "@/types/subscription";
-import * as brandIcons from "simple-icons";
+import {
+  siApplemusic,
+  siGooglecloud,
+  siIcloud,
+  siNetflix,
+  siNotion,
+  siSpotify,
+  siYoutube,
+} from "simple-icons";
 
 type BrandIcon = {
   title: string;
@@ -9,7 +17,15 @@ type BrandIcon = {
 
 const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-const ICONS = Object.values(brandIcons) as BrandIcon[];
+const ICONS: BrandIcon[] = [
+  siApplemusic,
+  siGooglecloud,
+  siIcloud,
+  siNetflix,
+  siNotion,
+  siSpotify,
+  siYoutube,
+];
 
 const BRAND_ALIASES: Record<string, string> = {
   googleone: "googlecloud",
