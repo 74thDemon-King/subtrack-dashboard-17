@@ -43,27 +43,27 @@ function SubscriptionsPage() {
     });
   }, [subs, q, cat]);
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleting) return;
     const removed = deleting;
-    remove(removed.id);
-    setDeleting(null);
-    toast.success(`${removed.name} removed`, {
+    try {
+      await remove(removed.id);
+      setDeleting(null);
+      toast.success(`${removed.name} removed`, {
       action: {
         label: "Undo",
         onClick: () => {
           const { id: _id, ...subscription } = removed;
-          add(subscription);
+          void add(subscription);
         },
       },
-    });
+      });
+    } catch { toast.error("Could not remove this subscription."); }
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editing || !editing.name.trim() || editing.amount < 0) return;
-    update(editing.id, { ...editing, name: editing.name.trim() });
-    toast.success(`${editing.name} updated`);
-    setEditing(null);
+    try { await update(editing.id, { ...editing, name: editing.name.trim() }); toast.success(`${editing.name} updated`); setEditing(null); } catch { toast.error("Could not update this subscription."); }
   };
 
   return (
@@ -172,7 +172,7 @@ function SubscriptionsPage() {
               <div><Label htmlFor="edit-source">Payment source</Label><Input id="edit-source" className="mt-1.5" value={editing.paymentSource} onChange={(e) => setEditing({ ...editing, paymentSource: e.target.value })} /></div>
             </div>
           )}
-          <DialogFooter><Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button><Button onClick={saveEdit}>Save changes</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button><Button onClick={() => void saveEdit()}>Save changes</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -180,7 +180,7 @@ function SubscriptionsPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Remove {deleting?.name}?</DialogTitle></DialogHeader>
           <p className="text-sm text-muted-foreground">This removes the subscription from your dashboard and analytics. You can undo it from the confirmation message.</p>
-          <DialogFooter><Button variant="outline" onClick={() => setDeleting(null)}>Keep it</Button><Button variant="destructive" onClick={confirmDelete}>Remove</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setDeleting(null)}>Keep it</Button><Button variant="destructive" onClick={() => void confirmDelete()}>Remove</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

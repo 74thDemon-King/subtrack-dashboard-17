@@ -1,0 +1,11 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
+import { Logo } from "@/components/subtrack/Logo";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+export const Route = createFileRoute("/forgot-password")({ head: () => ({ meta: [{ title: "Reset password — SubTrack" }, { name: "description", content: "Request a secure SubTrack password reset link." }, { property: "og:title", content: "Reset password — SubTrack" }, { property: "og:description", content: "Request a secure password reset link." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: ForgotPassword });
+function ForgotPassword() { const [email, setEmail] = useState(""); const [message, setMessage] = useState(""); async function submit(event: React.FormEvent) { event.preventDefault(); if (!z.string().email().safeParse(email.trim()).success) { setMessage("Enter a valid email address."); return; } const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/reset-password` }); setMessage(error ? error.message : "If an account exists, a reset link is on its way."); } return <main className="flex min-h-screen items-center justify-center bg-background px-5"><div className="w-full max-w-md animate-fade-up"><Logo /><h1 className="mt-10 text-3xl font-bold">Reset your password</h1><p className="mt-2 text-muted-foreground">We’ll email you a secure link to choose a new password.</p><form onSubmit={submit} className="mt-7 space-y-4"><div><Label htmlFor="reset-email">Email</Label><Input id="reset-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1.5 h-11" required /></div>{message && <p className="text-sm text-muted-foreground" role="status">{message}</p>}<Button className="h-11 w-full">Send reset link</Button></form><Button asChild variant="link" className="mt-4 px-0"><Link to="/auth" search={{ next: "" }}>Back to sign in</Link></Button></div></main>; }

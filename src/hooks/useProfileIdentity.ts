@@ -1,35 +1,9 @@
-import { useSyncExternalStore } from "react";
-
-const KEY = "subtrack.profile.v1";
-const fallback = { name: "Arjun Kumar", email: "arjun@example.com" };
-
-function getSnapshot() {
-  try {
-    const saved = JSON.parse(window.localStorage.getItem(KEY) || "{}");
-    return JSON.stringify({
-      name: typeof saved.name === "string" ? saved.name : fallback.name,
-      email: typeof saved.email === "string" ? saved.email : fallback.email,
-    });
-  } catch {
-    return JSON.stringify(fallback);
-  }
-}
-
-function subscribe(listener: () => void) {
-  const onStorage = (event: StorageEvent) => {
-    if (event.key === KEY) listener();
-  };
-  const onProfile = () => listener();
-  window.addEventListener("storage", onStorage);
-  window.addEventListener("subtrack:profile", onProfile);
-  return () => {
-    window.removeEventListener("storage", onStorage);
-    window.removeEventListener("subtrack:profile", onProfile);
-  };
-}
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+const fallback = { name: "SubTrack User", email: "" };
 
 export function useProfileIdentity() {
-  return JSON.parse(
-    useSyncExternalStore(subscribe, getSnapshot, () => JSON.stringify(fallback)),
-  ) as typeof fallback;
+  const [profile, setProfile] = useState(fallback);
+  useEffect(() => { let active = true; void supabase.auth.getUser().then(async ({ data }) => { if (!data.user || !active) return; const { data: record } = await supabase.from("profiles").select("display_name").eq("id", data.user.id).maybeSingle(); if (active) setProfile({ name: record?.display_name || data.user.user_metadata?.display_name || data.user.email?.split("@")[0] || fallback.name, email: data.user.email ?? "" }); }); return () => { active = false; }; }, []);
+  return profile;
 }
