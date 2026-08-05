@@ -42,13 +42,14 @@ function AddSubscription() {
 
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.amount) {
       toast.error("Please fill in the name and amount.");
       return;
     }
-    add({
+    try {
+      await add({
       name: form.name.trim(),
       category: form.category,
       amount: Number(form.amount),
@@ -58,9 +59,12 @@ function AddSubscription() {
       status: form.status,
       color: colorFor(form.name),
       logo: form.name.trim().charAt(0).toUpperCase(),
-    });
-    toast.success(`${form.name} added`);
-    void navigate({ to: "/subscriptions", search: { q: "" } });
+      });
+      toast.success(`${form.name} added`);
+      void navigate({ to: "/subscriptions", search: { q: "" } });
+    } catch {
+      toast.error("Could not save this subscription. Please try again.");
+    }
   };
 
   return (
@@ -70,7 +74,7 @@ function AddSubscription() {
           <Link to="/subscriptions" search={{ q: "" }}><ArrowLeft className="mr-1 h-4 w-4" /> Back to subscriptions</Link>
         </Button>
         <h1 className="text-2xl font-semibold tracking-tight">Add a subscription</h1>
-        <p className="text-sm text-muted-foreground">Details are saved locally in your browser.</p>
+        <p className="text-sm text-muted-foreground">Details are securely synced to your account.</p>
       </div>
 
       <Card className="rounded-2xl border-border/60 p-6 shadow-sm">

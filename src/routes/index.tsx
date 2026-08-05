@@ -40,10 +40,10 @@ function Landing() {
           </nav>
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" className="hidden sm:inline-flex">
-              <Link to="/dashboard">View Demo</Link>
+              <Link to="/auth" search={{ next: "/dashboard" }}>Sign in</Link>
             </Button>
             <Button asChild className="rounded-xl shadow-sm">
-              <Link to="/dashboard">Get Started</Link>
+              <Link to="/auth" search={{ next: "/dashboard" }}>Get Started</Link>
             </Button>
           </div>
         </div>
@@ -64,13 +64,13 @@ function Landing() {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="h-12 rounded-xl px-6 shadow-sm">
-              <Link to="/dashboard">Get Started <ArrowRight className="ml-1 h-4 w-4" /></Link>
+              <Link to="/auth" search={{ next: "/dashboard" }}>Get Started <ArrowRight className="ml-1 h-4 w-4" /></Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 rounded-xl border-border/70 px-6">
               <Link to="/dashboard">View Demo</Link>
             </Button>
           </div>
-          <p className="mt-4 text-xs text-muted-foreground">No signup. Everything runs privately in your browser.</p>
+          <p className="mt-4 text-xs text-muted-foreground">Free to start. Your data stays private to your account.</p>
         </div>
 
         {/* Hero preview mock */}
@@ -191,10 +191,10 @@ function Landing() {
       <section className="border-t border-border/60 bg-muted/30 py-20">
         <div className="mx-auto max-w-3xl px-4 text-center">
           <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Ready to take control of your recurring spend?</h2>
-          <p className="mt-3 text-muted-foreground">Jump straight into the dashboard — no account, no setup.</p>
+            <p className="mt-3 text-muted-foreground">Create your account and bring every recurring payment into one calm view.</p>
           <div className="mt-6 flex justify-center gap-3">
             <Button asChild size="lg" className="h-12 rounded-xl px-6 shadow-sm">
-              <Link to="/dashboard">Open Dashboard <ArrowRight className="ml-1 h-4 w-4" /></Link>
+              <Link to="/auth" search={{ next: "/dashboard" }}>Start tracking <ArrowRight className="ml-1 h-4 w-4" /></Link>
             </Button>
           </div>
         </div>

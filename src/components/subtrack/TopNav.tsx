@@ -1,4 +1,4 @@
-import { Bell, Search } from "lucide-react";
+import { Bell, LogOut, Search, User } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -17,9 +17,12 @@ import { Badge } from "@/components/ui/badge";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { useProfileIdentity } from "@/hooks/useProfileIdentity";
 import { daysUntil, fmtDate, inr } from "@/lib/format";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function TopNav() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [query, setQuery] = useState("");
   const { subs } = useSubscriptions();
   const profile = useProfileIdentity();
@@ -32,6 +35,13 @@ export function TopNav() {
   const submitSearch = (event: React.FormEvent) => {
     event.preventDefault();
     void navigate({ to: "/subscriptions", search: { q: query.trim() } });
+  };
+
+  const signOut = async () => {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    void navigate({ to: "/auth", search: { next: "" }, replace: true });
   };
 
   return (
@@ -70,11 +80,10 @@ export function TopNav() {
             {renewals.length === 0 && <DropdownMenuItem disabled>No renewals in the next 7 days</DropdownMenuItem>}
           </DropdownMenuContent>
         </DropdownMenu>
-        <Link to="/profile" aria-label="Open profile">
-          <Avatar className="h-9 w-9 border border-border/60">
-            <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">{initials}</AvatarFallback>
-          </Avatar>
-        </Link>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-10 w-10 rounded-full"><Avatar className="h-9 w-9 border border-border/60"><AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">{initials}</AvatarFallback></Avatar></Button></DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56"><DropdownMenuLabel><span className="block truncate">{profile.name}</span><span className="block truncate text-xs font-normal text-muted-foreground">{profile.email}</span></DropdownMenuLabel><DropdownMenuSeparator /><DropdownMenuItem asChild><Link to="/profile"><User className="mr-2 h-4 w-4" />Profile</Link></DropdownMenuItem><DropdownMenuItem onClick={() => void signOut()}><LogOut className="mr-2 h-4 w-4" />Sign out</DropdownMenuItem></DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
