@@ -1,82 +1,25 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Subscription } from "@/types/subscription";
-import { mockSubscriptions } from "@/data/mockSubscriptions";
+import { supabase } from "@/integrations/supabase/client";
 
-const KEY = "subtrack.subscriptions.v1";
+type SubscriptionRow = { id: string; name: string; category: string; amount: number; cycle: string; renewal_date: string; status: string; payment_source: string; color: string; logo: string | null; last_used_days_ago: number | null };
 
-function load(): Subscription[] {
-  if (typeof window === "undefined") return mockSubscriptions;
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    if (!raw) return mockSubscriptions;
-    return JSON.parse(raw) as Subscription[];
-  } catch {
-    return mockSubscriptions;
-  }
+function fromRow(row: SubscriptionRow): Subscription {
+  return { id: row.id, name: row.name, category: row.category as Subscription["category"], amount: Number(row.amount), cycle: row.cycle as Subscription["cycle"], renewalDate: row.renewal_date, status: row.status as Subscription["status"], paymentSource: row.payment_source, color: row.color, logo: row.logo ?? undefined, lastUsedDaysAgo: row.last_used_days_ago ?? undefined };
 }
 
-let browserSnapshot: Subscription[] | undefined;
-let browserRaw: string | null | undefined;
-const listeners = new Set<() => void>();
-
-function getSnapshot() {
-  const raw = window.localStorage.getItem(KEY);
-  if (browserSnapshot === undefined || raw !== browserRaw) {
-    browserRaw = raw;
-    browserSnapshot = load();
-  }
-  return browserSnapshot;
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  const onStorage = (event: StorageEvent) => {
-    if (event.key === KEY) listener();
-  };
-  window.addEventListener("storage", onStorage);
-  return () => {
-    listeners.delete(listener);
-    window.removeEventListener("storage", onStorage);
-  };
-}
-
-function write(next: Subscription[]) {
-  browserSnapshot = next;
-  browserRaw = JSON.stringify(next);
-  window.localStorage.setItem(KEY, browserRaw);
-  listeners.forEach((listener) => listener());
+function toRow(subscription: Omit<Subscription, "id"> | Partial<Subscription>) {
+  return { ...(subscription.name !== undefined && { name: subscription.name }), ...(subscription.category !== undefined && { category: subscription.category }), ...(subscription.amount !== undefined && { amount: subscription.amount }), ...(subscription.cycle !== undefined && { cycle: subscription.cycle }), ...(subscription.renewalDate !== undefined && { renewal_date: subscription.renewalDate }), ...(subscription.status !== undefined && { status: subscription.status }), ...(subscription.paymentSource !== undefined && { payment_source: subscription.paymentSource }), ...(subscription.color !== undefined && { color: subscription.color }), ...(subscription.logo !== undefined && { logo: subscription.logo }), ...(subscription.lastUsedDaysAgo !== undefined && { last_used_days_ago: subscription.lastUsedDaysAgo }) };
 }
 
 export function useSubscriptions() {
-  const subs = useSyncExternalStore(subscribe, getSnapshot, () => mockSubscriptions);
-
-  const persist = useCallback((updateSubs: (current: Subscription[]) => Subscription[]) => {
-    try {
-      write(updateSubs(getSnapshot()));
-    } catch {}
-  }, []);
-
-  const add = useCallback(
-    (s: Omit<Subscription, "id">) => {
-      const next: Subscription = { ...s, id: crypto.randomUUID() };
-      persist((current) => [next, ...current]);
-    },
-    [persist],
-  );
-
-  const update = useCallback(
-    (id: string, patch: Partial<Subscription>) => {
-      persist((current) => current.map((s) => (s.id === id ? { ...s, ...patch } : s)));
-    },
-    [persist],
-  );
-
-  const remove = useCallback(
-    (id: string) => persist((current) => current.filter((s) => s.id !== id)),
-    [persist],
-  );
-
-  const reset = useCallback(() => persist(() => mockSubscriptions), [persist]);
-
-  return { subs, ready: true, add, update, remove, reset };
+  const [subs, setSubs] = useState<Subscription[]>([]);
+  const [ready, setReady] = useState(false);
+  const refresh = useCallback(async () => { const { data, error } = await supabase.from("subscriptions").select("*").order("renewal_date"); if (!error && data) setSubs(data.map(fromRow)); setReady(true); }, []);
+  useEffect(() => { void refresh(); }, [refresh]);
+  const add = useCallback(async (subscription: Omit<Subscription, "id">) => { const { data: userData } = await supabase.auth.getUser(); if (!userData.user) throw new Error("Sign in required"); const { data, error } = await supabase.from("subscriptions").insert({ ...toRow(subscription), name: subscription.name, category: subscription.category, amount: subscription.amount, cycle: subscription.cycle, renewal_date: subscription.renewalDate, user_id: userData.user.id }).select().single(); if (error) throw error; const added = fromRow(data); setSubs((current) => [added, ...current]); return added; }, []);
+  const update = useCallback(async (id: string, patch: Partial<Subscription>) => { const { data, error } = await supabase.from("subscriptions").update(toRow(patch)).eq("id", id).select().single(); if (error) throw error; setSubs((current) => current.map((sub) => sub.id === id ? fromRow(data) : sub)); }, []);
+  const remove = useCallback(async (id: string) => { const { error } = await supabase.from("subscriptions").delete().eq("id", id); if (error) throw error; setSubs((current) => current.filter((sub) => sub.id !== id)); }, []);
+  const reset = useCallback(async () => { const { error } = await supabase.from("subscriptions").delete().not("id", "is", null); if (error) throw error; setSubs([]); }, []);
+  return { subs, ready, add, update, remove, reset, refresh };
 }
