@@ -3,7 +3,6 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/subtrack/AppSidebar";
 import { TopNav } from "@/components/subtrack/TopNav";
 import { Toaster } from "@/components/ui/sonner";
-import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_shell")({
@@ -17,13 +16,6 @@ export const Route = createFileRoute("/_shell")({
 });
 
 function ShellLayout() {
-  useEffect(() => {
-    try {
-      const profile = JSON.parse(window.localStorage.getItem("subtrack.profile.v1") || "{}");
-      document.documentElement.classList.toggle("dark", profile.darkMode === true);
-    } catch {}
-  }, []);
-
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-muted/30">

@@ -1,9 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { ArrowRight, BarChart3, Bell, CalendarClock, CreditCard, Layers, Lightbulb, ShieldCheck, Sparkles, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/subtrack/Logo";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -12,6 +14,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Track OTT subscriptions, utility bills, SaaS tools and recurring expenses from a single, beautiful dashboard." },
       { property: "og:title", content: "SubTrack — Manage Every Subscription in One Place" },
       { property: "og:description", content: "One dashboard for every recurring payment. Renewals, spending, and savings — all in one place." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Landing,
@@ -27,6 +31,16 @@ const features = [
 ];
 
 function Landing() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const next = window.sessionStorage.getItem("subtrack.auth.next");
+    if (!next) return;
+    void supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) return;
+      window.sessionStorage.removeItem("subtrack.auth.next");
+      void navigate({ to: next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard" });
+    });
+  }, [navigate]);
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Nav */}

@@ -8,13 +8,12 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_shell/profile")({
   head: () => ({ meta: [{ title: "Profile — SubTrack" }] }),
   component: ProfilePage,
 });
-
-const KEY = "subtrack.profile.v1";
 
 type Profile = {
   name: string;
@@ -27,7 +26,7 @@ type Profile = {
 
 const defaults: Profile = {
   name: "Arjun Kumar",
-  email: "arjun@example.com",
+  email: "",
   darkMode: false,
   emailAlerts: true,
   pushAlerts: false,
@@ -38,19 +37,20 @@ function ProfilePage() {
   const [p, setP] = useState<Profile>(defaults);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(KEY);
-      if (raw) {
-        const saved = { ...defaults, ...JSON.parse(raw) };
-        setP(saved);
-        document.documentElement.classList.toggle("dark", saved.darkMode);
-      }
-    } catch {}
+    void supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).maybeSingle();
+      const saved = { name: profile?.display_name || data.user.user_metadata?.display_name || "SubTrack User", email: data.user.email ?? "", darkMode: profile?.dark_mode ?? false, emailAlerts: profile?.email_alerts ?? true, pushAlerts: profile?.push_alerts ?? false, currency: (profile?.currency || "INR") as Profile["currency"] };
+      setP(saved); document.documentElement.classList.toggle("dark", saved.darkMode);
+    });
   }, []);
 
-  const save = () => {
+  const save = async () => {
     try {
-      window.localStorage.setItem(KEY, JSON.stringify(p));
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) throw new Error("Sign in required");
+      const { error } = await supabase.from("profiles").update({ display_name: p.name.trim(), currency: p.currency, dark_mode: p.darkMode, email_alerts: p.emailAlerts, push_alerts: p.pushAlerts }).eq("id", data.user.id);
+      if (error) throw error;
       document.documentElement.classList.toggle("dark", p.darkMode);
       window.dispatchEvent(new CustomEvent("subtrack:profile"));
       toast.success("Preferences saved");
@@ -86,7 +86,7 @@ function ProfilePage() {
           </div>
           <div>
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={p.email} onChange={(e) => setP({ ...p, email: e.target.value })} className="mt-1.5 h-11 rounded-xl" />
+            <Input id="email" type="email" value={p.email} disabled className="mt-1.5 h-11 rounded-xl" />
           </div>
           <div>
             <Label>Currency</Label>
@@ -129,7 +129,7 @@ function ProfilePage() {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={save} className="rounded-xl shadow-sm">Save preferences</Button>
+        <Button onClick={() => void save()} className="rounded-xl shadow-sm">Save preferences</Button>
       </div>
     </div>
   );
