@@ -14,7 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          currency: string
+          dark_mode: boolean
+          display_name: string
+          email_alerts: boolean
+          id: string
+          push_alerts: boolean
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          currency?: string
+          dark_mode?: boolean
+          display_name?: string
+          email_alerts?: boolean
+          id: string
+          push_alerts?: boolean
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          currency?: string
+          dark_mode?: boolean
+          display_name?: string
+          email_alerts?: boolean
+          id?: string
+          push_alerts?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          amount: number
+          category: string
+          color: string
+          created_at: string
+          cycle: string
+          id: string
+          last_used_days_ago: number | null
+          logo: string | null
+          name: string
+          payment_source: string
+          renewal_date: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          color?: string
+          created_at?: string
+          cycle: string
+          id?: string
+          last_used_days_ago?: number | null
+          logo?: string | null
+          name: string
+          payment_source?: string
+          renewal_date: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          color?: string
+          created_at?: string
+          cycle?: string
+          id?: string
+          last_used_days_ago?: number | null
+          logo?: string | null
+          name?: string
+          payment_source?: string
+          renewal_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
