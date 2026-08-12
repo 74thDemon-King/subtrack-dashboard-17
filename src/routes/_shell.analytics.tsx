@@ -3,8 +3,10 @@ import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/subtrack/StatCard";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
-import { inr, monthlyEquivalent } from "@/lib/format";
-import { monthlySpendTrend } from "@/data/mockSubscriptions";
+import { inr, axisMoney, monthlyEquivalent } from "@/lib/format";
+import { potentialSavings, projection as buildProjection, spendTrend } from "@/lib/derive";
+import { EmptyState } from "@/components/subtrack/EmptyState";
+import { PageSkeleton } from "@/components/subtrack/Loaders";
 import { Wallet, TrendingUp, PiggyBank, Calendar } from "lucide-react";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -21,7 +23,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 function AnalyticsPage() {
-  const { subs } = useSubscriptions();
+  const { subs, ready, seedSamples } = useSubscriptions();
   const active = subs.filter((s) => s.status === "Active");
 
   const monthly = active.reduce((sum, s) => sum + monthlyEquivalent(s.amount, s.cycle), 0);
@@ -37,24 +39,27 @@ function AnalyticsPage() {
       .sort((a, b) => b.value - a.value);
   }, [active]);
 
-  const projection = useMemo(() => {
-    const months = ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return months.map((m, i) => ({ month: m, projected: Math.round(monthly * (1 + i * 0.02)) }));
-  }, [monthly]);
+  const projection = useMemo(() => buildProjection(subs), [subs]);
+  const trend = useMemo(() => spendTrend(subs), [subs]);
+  const savings = useMemo(() => potentialSavings(subs), [subs]);
 
   const highest = byCategory[0];
 
+  if (!ready) return <PageSkeleton />;
+
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-7xl animate-fade-up space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
         <p className="text-sm text-muted-foreground">Visualise your recurring spend over time.</p>
       </div>
 
+      {subs.length === 0 && <EmptyState onSeed={seedSamples} />}
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Avg. Monthly Spend" value={inr(Math.round(monthly))} icon={Wallet} />
         <StatCard label="Highest Category" value={highest?.name || "—"} hint={highest ? inr(highest.value) + "/mo" : ""} icon={TrendingUp} accent="bg-violet-500/10 text-violet-600" />
-        <StatCard label="Potential Savings" value={inr(900)} hint="Est. per month" icon={PiggyBank} accent="bg-emerald-500/10 text-emerald-600" />
+        <StatCard label="Potential Savings" value={inr(savings)} hint="Unused & paused services" icon={PiggyBank} accent="bg-emerald-500/10 text-emerald-600" />
         <StatCard label="Yearly Subscription Cost" value={inr(Math.round(yearly))} icon={Calendar} accent="bg-amber-500/10 text-amber-600" />
       </div>
 
@@ -64,7 +69,7 @@ function AnalyticsPage() {
           <p className="text-xs text-muted-foreground">Last 6 months</p>
           <div className="mt-4 h-72">
             <ResponsiveContainer>
-              <AreaChart data={monthlySpendTrend}>
+              <AreaChart data={trend}>
                 <defs>
                   <linearGradient id="a1" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.35} />
@@ -73,7 +78,7 @@ function AnalyticsPage() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
                 <XAxis dataKey="month" stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${v}`} />
+                <YAxis stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={axisMoney} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--color-border)" }} formatter={(v: number) => inr(v)} />
                 <Area type="monotone" dataKey="amount" stroke="var(--color-primary)" strokeWidth={2.5} fill="url(#a1)" />
               </AreaChart>
@@ -99,13 +104,13 @@ function AnalyticsPage() {
 
         <Card className="rounded-2xl border-border/60 p-5 shadow-sm">
           <p className="text-sm font-medium">Yearly projection</p>
-          <p className="text-xs text-muted-foreground">Assuming a 2% MoM increase</p>
+          <p className="text-xs text-muted-foreground">Next 6 months based on real billing cycles</p>
           <div className="mt-4 h-72">
             <ResponsiveContainer>
               <BarChart data={projection}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
                 <XAxis dataKey="month" stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${v}`} />
+                <YAxis stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={axisMoney} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--color-border)" }} formatter={(v: number) => inr(v)} />
                 <Bar dataKey="projected" fill="var(--color-primary)" radius={[8, 8, 0, 0]} />
               </BarChart>

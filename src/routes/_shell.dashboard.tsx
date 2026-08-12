@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/subtrack/StatCard";
 import { SubLogo } from "@/components/subtrack/SubLogo";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
-import { inr, daysUntil, monthlyEquivalent } from "@/lib/format";
-import { monthlySpendTrend, staticInsights } from "@/data/mockSubscriptions";
+import { inr, axisMoney, daysUntil, monthlyEquivalent } from "@/lib/format";
+import { buildInsights, healthScore, potentialSavings, spendTrend } from "@/lib/derive";
+import { EmptyState } from "@/components/subtrack/EmptyState";
+import { PageSkeleton } from "@/components/subtrack/Loaders";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell, CartesianGrid } from "recharts";
 import { useProfileIdentity } from "@/hooks/useProfileIdentity";
 
@@ -29,7 +31,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 function Dashboard() {
-  const { subs } = useSubscriptions();
+  const { subs, ready, seedSamples } = useSubscriptions();
   const profile = useProfileIdentity();
   const active = subs.filter((s) => s.status === "Active");
 
@@ -44,6 +46,11 @@ function Dashboard() {
     [active],
   );
 
+  const trend = useMemo(() => spendTrend(subs), [subs]);
+  const savings = useMemo(() => potentialSavings(subs), [subs]);
+  const score = useMemo(() => healthScore(subs), [subs]);
+  const insights = useMemo(() => buildInsights(subs), [subs]);
+
   const byCategory = useMemo(() => {
     const map: Record<string, number> = {};
     for (const s of active) {
@@ -52,8 +59,10 @@ function Dashboard() {
     return Object.entries(map).map(([name, value]) => ({ name, value: Math.round(value) }));
   }, [active]);
 
+  if (!ready) return <PageSkeleton cards={5} />;
+
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-7xl animate-fade-up space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Welcome back, {profile.name.split(" ")[0] || "there"}</h1>
@@ -64,12 +73,14 @@ function Dashboard() {
         </Button>
       </div>
 
+      {subs.length === 0 && <EmptyState onSeed={seedSamples} />}
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <StatCard label="Monthly Spending" value={inr(Math.round(monthlySpend))} icon={CreditCard} trend={{ value: "3.2% vs last month", positive: false }} />
+        <StatCard label="Monthly Spending" value={inr(Math.round(monthlySpend))} icon={CreditCard} hint={`${active.length} active services`} />
         <StatCard label="Active Subscriptions" value={String(active.length)} icon={TrendingUp} hint={`${subs.length - active.length} inactive`} accent="bg-emerald-500/10 text-emerald-600" />
         <StatCard label="Upcoming Renewals" value={String(upcoming.length)} icon={CalendarClock} hint="Next 30 days" accent="bg-amber-500/10 text-amber-600" />
-        <StatCard label="Potential Savings" value={inr(900)} icon={PiggyBank} hint="Based on 2 unused" accent="bg-violet-500/10 text-violet-600" />
-        <StatCard label="Health Score" value="78/100" icon={HeartPulse} hint="Good — room to trim" accent="bg-rose-500/10 text-rose-600" />
+        <StatCard label="Potential Savings" value={inr(savings)} icon={PiggyBank} hint="Unused & paused services" accent="bg-violet-500/10 text-violet-600" />
+        <StatCard label="Health Score" value={`${score}/100`} icon={HeartPulse} hint={score >= 80 ? "Healthy spending" : "Room to trim"} accent="bg-rose-500/10 text-rose-600" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -83,18 +94,12 @@ function Dashboard() {
           </div>
           <div className="h-64 w-full">
             <ResponsiveContainer>
-              <LineChart data={monthlySpendTrend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="ln" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="var(--color-primary)" />
-                    <stop offset="100%" stopColor="#10B981" />
-                  </linearGradient>
-                </defs>
+              <LineChart data={trend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
                 <XAxis dataKey="month" stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} fontSize={12} />
-                <YAxis stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} fontSize={12} tickFormatter={(v) => `₹${v}`} />
+                <YAxis stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} fontSize={12} tickFormatter={axisMoney} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--color-border)" }} formatter={(v: number) => inr(v)} />
-                <Line type="monotone" dataKey="amount" stroke="url(#ln)" strokeWidth={3} dot={{ r: 4, fill: "var(--color-primary)" }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="amount" stroke="var(--color-primary)" strokeWidth={3} dot={{ r: 4, fill: "var(--color-primary)" }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -173,7 +178,7 @@ function Dashboard() {
             <p className="text-sm font-medium">Recent Insights</p>
           </div>
           <div className="space-y-3">
-            {staticInsights.slice(0, 3).map((i) => (
+            {insights.slice(0, 3).map((i) => (
               <div key={i.id} className="rounded-xl border border-border/60 bg-muted/30 p-3">
                 <div className="flex items-start gap-2">
                   {i.severity === "warning" ? <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-600" /> : <Info className="mt-0.5 h-4 w-4 text-primary" />}
@@ -184,6 +189,7 @@ function Dashboard() {
                 </div>
               </div>
             ))}
+            {insights.length === 0 && <p className="py-4 text-center text-xs text-muted-foreground">No issues detected — your subscriptions look healthy.</p>}
             <Button asChild variant="ghost" size="sm" className="w-full text-primary">
               <Link to="/insights">See all insights <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
             </Button>
