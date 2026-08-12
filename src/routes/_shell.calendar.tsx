@@ -8,6 +8,8 @@ import { SubLogo } from "@/components/subtrack/SubLogo";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { inr, fmtDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/subtrack/EmptyState";
+import { PageSkeleton } from "@/components/subtrack/Loaders";
 
 export const Route = createFileRoute("/_shell/calendar")({
   head: () => ({ meta: [{ title: "Calendar — SubTrack" }] }),
@@ -17,7 +19,7 @@ export const Route = createFileRoute("/_shell/calendar")({
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function CalendarPage() {
-  const { subs } = useSubscriptions();
+  const { subs, ready, seedSamples } = useSubscriptions();
   const [cursor, setCursor] = useState(() => { const d = new Date(); d.setDate(1); return d; });
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -49,8 +51,10 @@ function CalendarPage() {
 
   const selectedSubs = selected ? (byDay[selected] || []) : [];
 
+  if (!ready) return <PageSkeleton cards={0} />;
+
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-7xl animate-fade-up space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Renewal calendar</h1>
@@ -66,6 +70,8 @@ function CalendarPage() {
           </Button>
         </div>
       </div>
+
+      {subs.length === 0 && <EmptyState onSeed={seedSamples} />}
 
       <Card className="rounded-2xl border-border/60 p-4 shadow-sm md:p-6">
         <div className="grid grid-cols-7 gap-1 pb-2 text-center text-xs font-medium text-muted-foreground">
@@ -112,6 +118,7 @@ function CalendarPage() {
             <DialogTitle>{selected && fmtDate(selected)}</DialogTitle>
           </DialogHeader>
           <ul className="divide-y divide-border/60">
+            {selectedSubs.length === 0 && <li className="py-6 text-center text-sm text-muted-foreground">Nothing renews on this date.</li>}
             {selectedSubs.map((s) => (
               <li key={s.id} className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-3">

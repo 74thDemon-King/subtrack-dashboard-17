@@ -1,5 +1,10 @@
-export const inr = (n: number) =>
-  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
+import { getCurrency, formatMoney, currencySymbol } from "@/lib/currency";
+
+/** Formats a value in the user's selected currency. */
+export const inr = (n: number) => formatMoney(n);
+export const money = (n: number) => formatMoney(n);
+export const axisMoney = (n: number) => `${currencySymbol()}${Math.round(n)}`;
+export const activeCurrency = getCurrency;
 
 export const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });

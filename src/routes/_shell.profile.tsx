@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { setCurrency, type CurrencyCode } from "@/lib/currency";
+import { FullPageLoader } from "@/components/subtrack/Loaders";
 
 export const Route = createFileRoute("/_shell/profile")({
   head: () => ({ meta: [{ title: "Profile — SubTrack" }] }),
@@ -35,13 +37,14 @@ const defaults: Profile = {
 
 function ProfilePage() {
   const [p, setP] = useState<Profile>(defaults);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     void supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
+      if (!data.user) { setLoading(false); return; }
       const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).maybeSingle();
       const saved = { name: profile?.display_name || data.user.user_metadata?.display_name || "SubTrack User", email: data.user.email ?? "", darkMode: profile?.dark_mode ?? false, emailAlerts: profile?.email_alerts ?? true, pushAlerts: profile?.push_alerts ?? false, currency: (profile?.currency || "INR") as Profile["currency"] };
-      setP(saved); document.documentElement.classList.toggle("dark", saved.darkMode);
+      setP(saved); setLoading(false); setCurrency(saved.currency as CurrencyCode); document.documentElement.classList.toggle("dark", saved.darkMode);
     });
   }, []);
 
@@ -52,6 +55,7 @@ function ProfilePage() {
       const { error } = await supabase.from("profiles").update({ display_name: p.name.trim(), currency: p.currency, dark_mode: p.darkMode, email_alerts: p.emailAlerts, push_alerts: p.pushAlerts }).eq("id", data.user.id);
       if (error) throw error;
       document.documentElement.classList.toggle("dark", p.darkMode);
+      setCurrency(p.currency as CurrencyCode);
       window.dispatchEvent(new CustomEvent("subtrack:profile"));
       toast.success("Preferences saved");
     } catch {
@@ -59,8 +63,10 @@ function ProfilePage() {
     }
   };
 
+  if (loading) return <FullPageLoader label="Loading your profile…" />;
+
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-3xl animate-fade-up space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Profile & preferences</h1>
         <p className="text-sm text-muted-foreground">Update your details and notification settings.</p>

@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SubLogo } from "@/components/subtrack/SubLogo";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
+import { EmptyState } from "@/components/subtrack/EmptyState";
+import { PageSkeleton } from "@/components/subtrack/Loaders";
 import { inr, fmtDate } from "@/lib/format";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -29,7 +31,7 @@ const CATEGORIES = ["All", "Entertainment", "Music", "Productivity", "Utilities"
 
 function SubscriptionsPage() {
   const search = Route.useSearch();
-  const { subs, add, update, remove } = useSubscriptions();
+  const { subs, ready, add, update, remove, seedSamples } = useSubscriptions();
   const [q, setQ] = useState(search.q);
   const [cat, setCat] = useState<string>("All");
   const [editing, setEditing] = useState<Subscription | null>(null);
@@ -66,8 +68,10 @@ function SubscriptionsPage() {
     try { await update(editing.id, { ...editing, name: editing.name.trim() }); toast.success(`${editing.name} updated`); setEditing(null); } catch { toast.error("Could not update this subscription."); }
   };
 
+  if (!ready) return <PageSkeleton cards={0} chart={false} />;
+
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-7xl animate-fade-up space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">My Subscriptions</h1>
@@ -151,12 +155,18 @@ function SubscriptionsPage() {
             </div>
           </Card>
         ))}
-        {filtered.length === 0 && (
+        {filtered.length === 0 && subs.length > 0 && (
           <Card className="col-span-full rounded-2xl border-dashed border-border/70 p-10 text-center">
             <p className="text-sm text-muted-foreground">No subscriptions match your filters.</p>
           </Card>
         )}
+        {subs.length === 0 && (
+          <div className="col-span-full">
+            <EmptyState onSeed={seedSamples} />
+          </div>
+        )}
       </div>
+
 
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent>
