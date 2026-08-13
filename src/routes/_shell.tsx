@@ -40,6 +40,7 @@ function ShellLayout() {
       </div>
       <Toaster />
       <OnboardingTour />
+      <ChatWidget />
     </SidebarProvider>
   );
 }

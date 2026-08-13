@@ -31,7 +31,7 @@ export function ChatWidget() {
     const currency = getCurrency();
     const monthly = subs
       .filter((sub) => sub.status !== "Cancelled")
-      .reduce((sum, sub) => sum + monthlyEquivalent(sub), 0);
+      .reduce((sum, sub) => sum + monthlyEquivalent(sub.amount, sub.cycle), 0);
     const lines = subs.map(
       (sub) =>
         `- ${sub.name} | ${sub.category} | ${sub.amount} ${currency} ${sub.cycle} | renews ${sub.renewalDate} | ${sub.status}` +
