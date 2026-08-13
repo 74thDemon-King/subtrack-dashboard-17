@@ -14,6 +14,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ShellRouteImport } from './routes/_shell'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ShellSubscriptionsRouteImport } from './routes/_shell.subscriptions'
 import { Route as ShellProfileRouteImport } from './routes/_shell.profile'
 import { Route as ShellInsightsRouteImport } from './routes/_shell.insights'
@@ -45,6 +46,11 @@ const ShellRoute = ShellRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShellSubscriptionsRoute = ShellSubscriptionsRouteImport.update({
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/insights': typeof ShellInsightsRoute
   '/profile': typeof ShellProfileRoute
   '/subscriptions': typeof ShellSubscriptionsRouteWithChildren
+  '/api/chat': typeof ApiChatRoute
   '/subscriptions/add': typeof ShellSubscriptionsAddRoute
   '/subscriptions/': typeof ShellSubscriptionsIndexRoute
 }
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof ShellDashboardRoute
   '/insights': typeof ShellInsightsRoute
   '/profile': typeof ShellProfileRoute
+  '/api/chat': typeof ApiChatRoute
   '/subscriptions/add': typeof ShellSubscriptionsAddRoute
   '/subscriptions': typeof ShellSubscriptionsIndexRoute
 }
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/_shell/insights': typeof ShellInsightsRoute
   '/_shell/profile': typeof ShellProfileRoute
   '/_shell/subscriptions': typeof ShellSubscriptionsRouteWithChildren
+  '/api/chat': typeof ApiChatRoute
   '/_shell/subscriptions/add': typeof ShellSubscriptionsAddRoute
   '/_shell/subscriptions/': typeof ShellSubscriptionsIndexRoute
 }
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/insights'
     | '/profile'
     | '/subscriptions'
+    | '/api/chat'
     | '/subscriptions/add'
     | '/subscriptions/'
   fileRoutesByTo: FileRoutesByTo
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/insights'
     | '/profile'
+    | '/api/chat'
     | '/subscriptions/add'
     | '/subscriptions'
   id:
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/_shell/insights'
     | '/_shell/profile'
     | '/_shell/subscriptions'
+    | '/api/chat'
     | '/_shell/subscriptions/add'
     | '/_shell/subscriptions/'
   fileRoutesById: FileRoutesById
@@ -182,6 +194,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiChatRoute: typeof ApiChatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -219,6 +232,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_shell/subscriptions': {
@@ -319,6 +339,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiChatRoute: ApiChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
