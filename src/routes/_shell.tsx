@@ -5,6 +5,7 @@ import { TopNav } from "@/components/subtrack/TopNav";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { FullPageLoader } from "@/components/subtrack/Loaders";
+import { OnboardingTour } from "@/components/subtrack/OnboardingTour";
 import { initCurrency, useCurrency } from "@/lib/currency";
 import { useEffect } from "react";
 
@@ -37,6 +38,7 @@ function ShellLayout() {
         </SidebarInset>
       </div>
       <Toaster />
+      <OnboardingTour />
     </SidebarProvider>
   );
 }
