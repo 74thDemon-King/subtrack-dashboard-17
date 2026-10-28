@@ -4,7 +4,7 @@ import { AppSidebar } from "@/components/subtrack/AppSidebar";
 import { TopNav } from "@/components/subtrack/TopNav";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { FullPageLoader } from "@/components/subtrack/Loaders";
+import { ShellSkeleton } from "@/components/subtrack/Loaders";
 import { OnboardingTour } from "@/components/subtrack/OnboardingTour";
 import { ChatWidget } from "@/components/subtrack/ChatWidget";
 import { initCurrency, useCurrency } from "@/lib/currency";

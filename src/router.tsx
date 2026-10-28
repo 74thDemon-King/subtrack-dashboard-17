@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
-import { FullPageLoader } from "./components/subtrack/Loaders";
+import { ShellSkeleton } from "./components/subtrack/Loaders";
 
 export const getRouter = () => {
   const queryClient = new QueryClient();
@@ -11,7 +11,7 @@ export const getRouter = () => {
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
-    defaultPendingComponent: () => <FullPageLoader />,
+    defaultPendingComponent: () => <ShellSkeleton />,
     defaultPendingMs: 200,
   });
 
