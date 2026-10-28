@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { setCurrency, type CurrencyCode } from "@/lib/currency";
-import { FullPageLoader } from "@/components/subtrack/Loaders";
+import { ProfileSkeleton } from "@/components/subtrack/Loaders";
 
 export const Route = createFileRoute("/_shell/profile")({
   head: () => ({ meta: [{ title: "Profile — SubTrack" }] }),
@@ -63,7 +63,7 @@ function ProfilePage() {
     }
   };
 
-  if (loading) return <FullPageLoader label="Loading your profile…" />;
+  if (loading) return <ProfileSkeleton />;
 
   return (
     <div className="mx-auto max-w-3xl animate-fade-up space-y-6">
